@@ -7,3 +7,7 @@ export function digitLength(number) { // TODO rename
   }
   return digit[1].length;
 }
+
+export function isInteger(number) {
+  return !digitLength(number);
+}

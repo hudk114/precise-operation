@@ -21,7 +21,7 @@
     return !getDecimalLength(number);
   }
 
-  var MAX_EXP = 21;
+  var MAX_DECIMAL = 15; // js自动取整会为16位小数
 
   /**
    * 直接使用toPrecision
@@ -29,6 +29,24 @@
    * 缺点 对超过precision范围的计算会丢失精度，需要自己手动传入 链式计算中的丢失精度会被放大
    * 适用场景 位数少的简单计算
    */
+
+  function toPrecision(number) {
+    var precision = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : MAX_DECIMAL;
+
+    return Number(number.toPrecision(precision));
+  }
+
+  function add(num1, num2, precision) {
+    return toPrecision(num1 + num2, precision);
+  }
+
+  function multiplication(num1, num2, precision) {
+    return toPrecision(num1 * num2, precision);
+  }
+
+  function division(num1, num2, precision) {
+    return toPrecision(num1 / num2, precision);
+  }
 
   /**
    * 将浮点数转化为整数进行计算的方式
@@ -137,69 +155,12 @@
     return number;
   }
 
-  function compareABS(number1, number2) {
-    return Math.abs(number1) >= Math.abs(number2);
-  }
-
-  /**
-   * 比较 arr1 是否大于等于 arr2
-   * @param {Array<Number>} arr1
-   * @param {Array<Number>} arr2
-   */
-  function judgeNoLessThan(arr1, arr2) {
-    if (arr1.length > arr2.length) return true;
-    if (arr1.length < arr2.length) return false;
-    var i = 0;
-    while (i < arr1.length) {
-      if (arr1[i] > arr2[i]) {
-        return true;
-      }
-      if (arr1[i] < arr2[i++]) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  function minusArray(arr1, arr2) {
-    // arr1一定大于arr2
-    var len1 = arr1.length;
-    var len2 = arr2.length;
-    var count = new Array(len1);
-    var flag = 0;
-    for (var i = 0; i < len1; i++) {
-      var sum = arr1[len1 - i - 1] - (arr2[len2 - i - 1] || 0) - flag;
-      if (sum >= 0) {
-        count[len1 - i - 1] = sum;
-        flag = 0;
-      } else {
-        count[len1 - i - 1] = 10 + sum;
-        flag = 1;
-      }
-    }
-
-    return rmZero(count);
-  }
-
-  function rmZero(count) {
-    while (count.length && count[0] === 0) {
-      count.shift();
-    }
-    if (!count.length) count = [0];
-
-    return count;
-  }
-
-  function isZero(arr) {
-    return arr.length === 1 && arr[0] === 0;
-  }
-
   function add$2(num1, num2) {
     var fixedNum1 = parse(num1);
     var fixedNum2 = parse(num2);
 
     if (fixedNum1.signal !== fixedNum2.signal) {
-      return minus$2(num1, multiplication$2(num2, -1));
+      return minus$2(num1, Number(multiplication$2(num2, -1)));
     }
 
     var e = Math.max(fixedNum1.exponent, fixedNum2.exponent);
@@ -236,11 +197,11 @@
     var fixedNum2 = parse(num2);
 
     if (fixedNum1.signal !== fixedNum2.signal) {
-      return add$2(num1, multiplication$2(num2, -1));
+      return add$2(num1, Number(multiplication$2(num2, -1)));
     }
 
-    if (!compareABS(num1, num2)) {
-      return multiplication$2(-1, minus$2(multiplication$2(-1, num2), multiplication$2(-1, num1)));
+    if (Math.abs(num1) < Math.abs(num2)) {
+      return multiplication$2(-1, Number(minus$2(num2, num1)));
     }
 
     var e = Math.max(fixedNum1.exponent, fixedNum2.exponent);
@@ -305,64 +266,6 @@
     });
   }
 
-  function division$2(num1, num2) {
-    if (num1 === 0 && num2 === 0) return NaN;
-    if (num1 === 0) return 0;
-    if (num2 === 0) return num1 / num2; // infinity精确度没有意义...
-
-    var fixedNum1 = parse(num1);
-    var fixedNum2 = parse(num2);
-
-    var e = fixedNum1.exponent - fixedNum2.exponent;
-    var dividend = fixedNum1.count.concat();
-    var divisor = fixedNum2.count.concat();
-    var divisorLength = divisor.length;
-
-    // 补齐dividend
-    if (dividend.length < divisorLength) {
-      for (var i = 0; i < divisorLength; i++) {
-        dividend.push(0);
-      }
-    }
-
-    var index = 0;
-    var tmpDividend = dividend.slice(0, divisorLength);
-    if (!judgeNoLessThan(tmpDividend, divisor)) e--; // 如果第一次需要借位，说明exponent需要再减1
-
-    var c = [0];
-    var tmp = 0;
-    while (!(isZero(tmpDividend) && index + divisorLength >= dividend.length) && index < MAX_EXP) {
-      // 防止无限循环
-      tmp = 0;
-      while (!judgeNoLessThan(tmpDividend, divisor) && !(isZero(tmpDividend) && index + divisorLength >= dividend.length)) {
-        // 需要补齐
-        tmpDividend.push(dividend[index + divisorLength] || 0);
-        tmpDividend = rmZero(tmpDividend);
-        index++;
-        c[index] = 0;
-      }
-
-      while (judgeNoLessThan(tmpDividend, divisor)) {
-        tmpDividend = minusArray(tmpDividend, divisor);
-        tmp++;
-      }
-
-      c[index] = tmp;
-    }
-
-    // MAX_LEN位四舍五入
-    if (c[MAX_EXP] !== void 0) {
-      c[MAX_EXP - 1] += c[MAX_EXP] > 4 ? 1 : 0;
-      c.length = MAX_EXP - 1;
-    }
-
-    return stringify({
-      count: c,
-      signal: fixedNum1.signal === fixedNum2.signal ? 1 : -1,
-      exponent: e
-    });
-  }
-
   function add$3(num1, num2) {
     for (var _len = arguments.length, rest = Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
       rest[_key - 2] = arguments[_key];
@@ -371,9 +274,9 @@
     if (rest.length) return add$3.apply(undefined, [Number(add$3(num1, num2))].concat(rest));
     if (isInteger(num1) && isInteger(num2)) return num1 + num2;
 
-    // return precision.add(num1, num2);
+    return add(num1, num2);
     // return parseToInt.add(num1, num2);
-    return add$2(num1, num2);
+    // return customCal.add(num1, num2);
   }
 
   function minus$3(num1, num2) {
@@ -397,9 +300,9 @@
     if (rest.length) return multiplication$3.apply(undefined, [Number(multiplication$3(num1, num2))].concat(rest));
     if (isInteger(num1) && isInteger(num2)) return num1 * num2;
 
-    // return precision.multiplication(num1, num2);
+    return multiplication(num1, num2);
     // return parseToInt.multiplication(num1, num2);
-    return multiplication$2(num1, num2);
+    // return customCal.multiplication(num1, num2);
   }
 
   function division$3(num1, num2) {
@@ -410,9 +313,9 @@
     if (rest.length) return division$3.apply(undefined, [Number(division$3(num1, num2))].concat(rest));
     if (isInteger(num1) && isInteger(num2)) return num1 / num2;
 
-    // return precision.division(num1, num2);
+    return division(num1, num2);
     // return parseToInt.division(num1, num2);
-    return division$2(num1, num2);
+    // return customCal.division(num1, num2);
   }
 
   exports.add = add$3;

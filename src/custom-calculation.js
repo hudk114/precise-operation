@@ -90,10 +90,6 @@ function fixToExponent (number, exponent) {
   return number;
 }
 
-function compareABS (number1, number2) {
-  return Math.abs(number1) >= Math.abs(number2);
-}
-
 /**
  * 比较 arr1 是否大于等于 arr2
  * @param {Array<Number>} arr1
@@ -151,7 +147,7 @@ export function add (num1, num2) {
   let fixedNum2 = parse(num2);
 
   if (fixedNum1.signal !== fixedNum2.signal) {
-    return minus(num1, multiplication(num2, -1));
+    return minus(num1, Number(multiplication(num2, -1))); // 使用Number还是会造成精确度缺失，参见改进1
   }
 
   let e = Math.max(fixedNum1.exponent, fixedNum2.exponent);
@@ -188,11 +184,11 @@ export function minus (num1, num2) {
   let fixedNum2 = parse(num2);
 
   if (fixedNum1.signal !== fixedNum2.signal) {
-    return add(num1, multiplication(num2, -1));
+    return add(num1, Number(multiplication(num2, -1)));
   }
 
-  if (!compareABS(num1, num2)) {
-    return multiplication(-1, minus(multiplication(-1, num2), multiplication(-1, num1)));
+  if (Math.abs(num1) < Math.abs(num2)) {
+    return multiplication(-1, Number(minus(num2, num1)));
   }
 
   let e = Math.max(fixedNum1.exponent, fixedNum2.exponent);

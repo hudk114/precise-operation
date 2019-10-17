@@ -1,9 +1,12 @@
 /**
  * 自组计算逻辑
  * 组合数组，类似手工四则运算
- * 优点 精确度最高
- * 缺点 复杂，空间占用高
+ * 优点 精确度高 理论上精度无限制
+ * 缺点 需要额外的存储空间，计算成本也较高 数据格式需要转化，因此在链式计算时的处理比较复杂
+ * 适用场景 比较复杂的计算场景 对精度要求高的场景 数值较大或较长，会超出安全范围的计算
+ * 后续改进 1. 对数据格式进行整体的替换，从index.js开始就进行转换（类似于big.js的方式），这样可以更好的支持链式计算，返回的数据能够统一，在乘除还有加减的转化中也能实现更好的支持；2. stringify方法改写，完全采用自己拼接字符串方式，使用Number仍会丢失精度
  */
+
 import { MAX_EXP } from './config';
 
 /**
@@ -11,7 +14,7 @@ import { MAX_EXP } from './config';
  * @param {Number} number
  * @returns {Object}
  */
-function stringify (number) {
+function parse (number) {
   if (number === 0) {
     return {
       signal: 1,
@@ -62,8 +65,7 @@ function stringify (number) {
   };
 }
 
-// TODO
-function parse ({ signal = 1, exponent = 0, count = [] } = {}) {
+function stringify ({ signal = 1, exponent = 0, count = [] } = {}) {
   if (count.length === 1 && count[0] === 0) return `0`;
 
   let number = `${signal < 0 ? '-' : ''}`;
@@ -145,8 +147,8 @@ function isZero (arr) {
 }
 
 export function add (num1, num2) {
-  let fixedNum1 = stringify(num1);
-  let fixedNum2 = stringify(num2);
+  let fixedNum1 = parse(num1);
+  let fixedNum2 = parse(num2);
 
   if (fixedNum1.signal !== fixedNum2.signal) {
     return minus(num1, multiplication(num2, -1));
@@ -174,7 +176,7 @@ export function add (num1, num2) {
     count.unshift(1);
   }
 
-  return parse({
+  return stringify({
     count,
     signal: fixedNum1.signal,
     exponent: e
@@ -182,8 +184,8 @@ export function add (num1, num2) {
 }
 
 export function minus (num1, num2) {
-  let fixedNum1 = stringify(num1);
-  let fixedNum2 = stringify(num2);
+  let fixedNum1 = parse(num1);
+  let fixedNum2 = parse(num2);
 
   if (fixedNum1.signal !== fixedNum2.signal) {
     return add(num1, multiplication(num2, -1));
@@ -216,7 +218,7 @@ export function minus (num1, num2) {
     }
   }
 
-  return parse({
+  return stringify({
     count,
     signal: fixedNum1.signal,
     exponent: e
@@ -226,8 +228,8 @@ export function minus (num1, num2) {
 export function multiplication (num1, num2) {
   if (num1 === 0 || num2 === 0) return '0';
 
-  let fixedNum1 = stringify(num1);
-  let fixedNum2 = stringify(num2);
+  let fixedNum1 = parse(num1);
+  let fixedNum2 = parse(num2);
 
   let e = fixedNum1.exponent + fixedNum2.exponent + 1; // a.bc * e.f = g.hijk * 10 指数需要添加一位
   let len = fixedNum1.count.length + fixedNum2.count.length;
@@ -248,7 +250,7 @@ export function multiplication (num1, num2) {
 
   if (flag) count[0] = flag; // 乘法溢出，造成多位
 
-  return parse({
+  return stringify({
     count,
     signal: fixedNum1.signal === fixedNum2.signal ? 1 : -1,
     exponent: e
@@ -260,8 +262,8 @@ export function division (num1, num2) {
   if (num1 === 0) return 0;
   if (num2 === 0) return num1 / num2; // infinity精确度没有意义...
 
-  let fixedNum1 = stringify(num1);
-  let fixedNum2 = stringify(num2);
+  let fixedNum1 = parse(num1);
+  let fixedNum2 = parse(num2);
 
   let e = fixedNum1.exponent - fixedNum2.exponent;
   let dividend = fixedNum1.count.concat();
@@ -305,7 +307,7 @@ export function division (num1, num2) {
     c.length = MAX_EXP - 1;
   }
 
-  return parse({
+  return stringify({
     count: c,
     signal: fixedNum1.signal === fixedNum2.signal ? 1 : -1,
     exponent: e

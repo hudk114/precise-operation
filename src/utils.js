@@ -9,14 +9,6 @@ export function getDecimalLength (number) {
   const exp = match[5] || 0;
 
   return decimal.length - exp;
-
-  // // TODO 科学计数法
-  // const num = number.toString();
-  // const digit = num.split('.');
-  // if (digit.length < 2) {
-  //   return 0;
-  // }
-  // return digit[1].length;
 }
 
 export function isInteger (number) {

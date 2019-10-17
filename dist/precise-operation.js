@@ -15,82 +15,28 @@
     var exp = match[5] || 0;
 
     return decimal.length - exp;
-
-    // // TODO 科学计数法
-    // const num = number.toString();
-    // const digit = num.split('.');
-    // if (digit.length < 2) {
-    //   return 0;
-    // }
-    // return digit[1].length;
   }
 
   function isInteger(number) {
     return !getDecimalLength(number);
   }
 
-  /**
-   * 将浮点数转化为整数进行计算的方式
-   * 参考precise-operation
-   * 优点 实现较为简单
-   * 缺点 对于符号较长的数，容易超出范围
-   */
-
-  function rangeCheck(number) {
-    if (number > Number.MAX_SAFE_INTEGER || number < Number.MIN_SAFE_INTEGER) {
-      throw new RangeError('结果超出范围');
-    }
-  }
-
-  function add(num1, num2) {
-    var base = Math.max(getDecimalLength(num1), getDecimalLength(num2));
-    var baseNum = Math.pow(10, base);
-    return (multiplication(num1, baseNum) + multiplication(num2, baseNum)) / baseNum;
-  }
-
-  function minus(num1, num2) {
-    var base = Math.max(getDecimalLength(num1), getDecimalLength(num2));
-    var baseNum = Math.pow(10, base);
-
-    return (multiplication(num1, baseNum) - multiplication(num2, baseNum)) / baseNum; // multiplication内部进行过range判断
-  }
-
-  function multiplication(num1, num2) {
-    var base1 = getDecimalLength(num1);
-    var base2 = getDecimalLength(num2);
-    var fixedNum1 = num1 * Math.pow(10, base1);
-    var fixedNum2 = num2 * Math.pow(10, base2);
-
-    rangeCheck(fixedNum1);
-    rangeCheck(fixedNum2);
-
-    var val = fixedNum1 * fixedNum2;
-    rangeCheck(val);
-
-    return val / Math.pow(10, base1 + base2);
-  }
-
-  function division(num1, num2) {
-    var base1 = getDecimalLength(num1);
-    var base2 = getDecimalLength(num2);
-    var fixedNum1 = num1 * Math.pow(10, base1);
-    var fixedNum2 = num2 * Math.pow(10, base2);
-
-    rangeCheck(fixedNum1);
-    rangeCheck(fixedNum2);
-
-    var val = fixedNum1 / fixedNum2;
-    rangeCheck(val);
-
-    return val / Math.pow(10, base1 + base2);
-  }
-
   var MAX_EXP = 21;
 
   /**
    * 直接使用toPrecision
-   * 优点 实现简单
-   * 缺点 不够精确，尤其对于超过precision范围的小数计算会失真；进行了toPrecision后，链式计算中失真会被放大；
+   * 优点 简单 系统方法 无需额外代码实现
+   * 缺点 对超过precision范围的计算会丢失精度，需要自己手动传入 链式计算中的丢失精度会被放大
+   * 适用场景 位数少的简单计算
+   */
+
+  /**
+   * 将浮点数转化为整数进行计算的方式
+   * 参考precise-operation
+   * 优点 相对简单 精确度比较高
+   * 缺点 无法对超出Number.MAX_SAFE_INTEGER的数据进行精确计算，会丢失精确度
+   * 适用场景 位数较少，计算范围不会超出安全范围的计算
+   * 后续改进 更为友好的异常处理
    */
 
   function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
@@ -100,7 +46,7 @@
    * @param {Number} number
    * @returns {Object}
    */
-  function stringify(number) {
+  function parse(number) {
     if (number === 0) {
       return {
         signal: 1,
@@ -158,8 +104,7 @@
     };
   }
 
-  // TODO
-  function parse() {
+  function stringify() {
     var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
         _ref$signal = _ref.signal,
         signal = _ref$signal === undefined ? 1 : _ref$signal,
@@ -250,8 +195,8 @@
   }
 
   function add$2(num1, num2) {
-    var fixedNum1 = stringify(num1);
-    var fixedNum2 = stringify(num2);
+    var fixedNum1 = parse(num1);
+    var fixedNum2 = parse(num2);
 
     if (fixedNum1.signal !== fixedNum2.signal) {
       return minus$2(num1, multiplication$2(num2, -1));
@@ -279,7 +224,7 @@
       count.unshift(1);
     }
 
-    return parse({
+    return stringify({
       count: count,
       signal: fixedNum1.signal,
       exponent: e
@@ -287,8 +232,8 @@
   }
 
   function minus$2(num1, num2) {
-    var fixedNum1 = stringify(num1);
-    var fixedNum2 = stringify(num2);
+    var fixedNum1 = parse(num1);
+    var fixedNum2 = parse(num2);
 
     if (fixedNum1.signal !== fixedNum2.signal) {
       return add$2(num1, multiplication$2(num2, -1));
@@ -321,7 +266,7 @@
       }
     }
 
-    return parse({
+    return stringify({
       count: count,
       signal: fixedNum1.signal,
       exponent: e
@@ -331,8 +276,8 @@
   function multiplication$2(num1, num2) {
     if (num1 === 0 || num2 === 0) return '0';
 
-    var fixedNum1 = stringify(num1);
-    var fixedNum2 = stringify(num2);
+    var fixedNum1 = parse(num1);
+    var fixedNum2 = parse(num2);
 
     var e = fixedNum1.exponent + fixedNum2.exponent + 1; // a.bc * e.f = g.hijk * 10 指数需要添加一位
     var len = fixedNum1.count.length + fixedNum2.count.length;
@@ -353,7 +298,7 @@
 
     if (flag) count[0] = flag; // 乘法溢出，造成多位
 
-    return parse({
+    return stringify({
       count: count,
       signal: fixedNum1.signal === fixedNum2.signal ? 1 : -1,
       exponent: e
@@ -365,8 +310,8 @@
     if (num1 === 0) return 0;
     if (num2 === 0) return num1 / num2; // infinity精确度没有意义...
 
-    var fixedNum1 = stringify(num1);
-    var fixedNum2 = stringify(num2);
+    var fixedNum1 = parse(num1);
+    var fixedNum2 = parse(num2);
 
     var e = fixedNum1.exponent - fixedNum2.exponent;
     var dividend = fixedNum1.count.concat();
@@ -411,7 +356,7 @@
       c.length = MAX_EXP - 1;
     }
 
-    return parse({
+    return stringify({
       count: c,
       signal: fixedNum1.signal === fixedNum2.signal ? 1 : -1,
       exponent: e
@@ -427,7 +372,7 @@
     if (isInteger(num1) && isInteger(num2)) return num1 + num2;
 
     // return precision.add(num1, num2);
-    return add(num1, num2);
+    // return parseToInt.add(num1, num2);
     return add$2(num1, num2);
   }
 
@@ -440,7 +385,7 @@
     if (isInteger(num1) && isInteger(num2)) return num1 - num2;
 
     // return precision.minus(num1, num2);
-    return minus(num1, num2);
+    // return parseToInt.minus(num1, num2);
     return minus$2(num1, num2);
   }
 
@@ -453,7 +398,7 @@
     if (isInteger(num1) && isInteger(num2)) return num1 * num2;
 
     // return precision.multiplication(num1, num2);
-    return multiplication(num1, num2);
+    // return parseToInt.multiplication(num1, num2);
     return multiplication$2(num1, num2);
   }
 
@@ -466,7 +411,7 @@
     if (isInteger(num1) && isInteger(num2)) return num1 / num2;
 
     // return precision.division(num1, num2);
-    return division(num1, num2);
+    // return parseToInt.division(num1, num2);
     return division$2(num1, num2);
   }
 

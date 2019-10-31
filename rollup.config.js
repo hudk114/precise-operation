@@ -1,6 +1,6 @@
 import babel from 'rollup-plugin-babel';
-import uglify from 'rollup-plugin-uglify';
-const { dev, prod } = require('./config');
+import typescript from 'rollup-plugin-typescript';
+const { dev } = require('./config');
 
 const options = {
   input: 'src/index.js',
@@ -11,15 +11,11 @@ const options = {
     name: 'precise-operation'
   },
   plugins: [
+    typescript(),
     babel({
       exclude: 'node_modules/**'
     })
   ]
 };
-
-if (process.env.NODE_ENV === 'production') {
-  options.output.file = `dist/${prod.name}`;
-  options.plugins.push(uglify());
-}
 
 export default options;

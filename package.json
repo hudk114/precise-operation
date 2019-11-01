@@ -20,7 +20,8 @@
   "precommit": [
     "format",
     "linter",
-    "stylelinter"
+    "stylelinter",
+    "test"
   ],
   "author": "hudk",
   "license": "",

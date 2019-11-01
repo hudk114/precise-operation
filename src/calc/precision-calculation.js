@@ -19,18 +19,18 @@ export default class PrecisionCalculation extends Calculation {
   }
 
   add (num1, num2) {
-    return toPrecision(num1 + num2, this.precision);
+    return toPrecision(Number(num1) + Number(num2), this.precision);
   }
 
   minus (num1, num2) {
-    return toPrecision(num1 - num2, this.precision);
+    return toPrecision(Number(num1) - Number(num2), this.precision);
   }
 
   multiplication (num1, num2) {
-    return toPrecision(num1 * num2, this.precision);
+    return toPrecision(Number(num1) * Number(num2), this.precision);
   }
 
   division (num1, num2) {
-    return toPrecision(num1 / num2, this.precision);
+    return toPrecision(Number(num1) / Number(num2), this.precision);
   }
 }

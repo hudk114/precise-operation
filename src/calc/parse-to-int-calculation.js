@@ -8,7 +8,7 @@
  */
 
 import { getDecimalLength, judgeSafeRange } from '../utils';
-import CONFIG from '../config';
+import CONFIG, { MAX_DECIMAL } from '../config';
 import { rangeError, rangeWarn } from '../error';
 import Calculation from './index';
 
@@ -44,7 +44,6 @@ function fixNum (num) {
   const base = getDecimalLength(num);
   return fixNumToInt(num) / Math.pow(10, base);
 }
-
 export default class ParseToIntCalculation extends Calculation {
   /**
    * 数字乘法，返回乘积
@@ -99,8 +98,8 @@ export default class ParseToIntCalculation extends Calculation {
   division (num1, num2) {
     const base1 = getDecimalLength(num1);
     const base2 = getDecimalLength(num2);
-    const fixedNum1 = num1 * Math.pow(10, base1);
-    const fixedNum2 = num2 * Math.pow(10, base2);
+    const fixedNum1 = fixNumToInt(num1);
+    const fixedNum2 = fixNumToInt(num2);
 
     rangeCheck(fixedNum1);
     rangeCheck(fixedNum2);
@@ -108,6 +107,11 @@ export default class ParseToIntCalculation extends Calculation {
     const val = fixedNum1 / fixedNum2;
     rangeCheck(val);
 
-    return this.multiplication(val, Math.pow(10, base2 - base1)).toString();
+    return Number(
+      ParseToIntCalculation.numMulti(
+        val,
+        Math.pow(10, base2 - base1)
+      ).toPrecision(MAX_DECIMAL)
+    ).toString();
   }
 }

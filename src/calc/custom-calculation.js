@@ -8,13 +8,15 @@
  */
 
 import { MAX_EXP } from '../config';
+import { normalize, isZero } from '../utils';
 
 /**
  * 数据格式化整理，将数据转变为 count[0].count[1]count[2]... * 10^exponent 的形式
- * @param {Number} number
- * @returns {Object}
+ * @param {Number|String} number
+ * @returns {<{ signal, exponent, count }>}
  */
 function parse (number) {
+  number = Number(number);
   if (number === 0) {
     return {
       signal: 1,
@@ -65,18 +67,35 @@ function parse (number) {
   };
 }
 
+/**
+ * 将格式化数据转为字符串
+ * @param {<{ signal, exponent, count }>} param0
+ * @returns {String}
+ */
 function stringify ({ signal = 1, exponent = 0, count = [] } = {}) {
-  if (count.length === 1 && count[0] === 0) return `0`;
+  let index = 1 + exponent;
 
-  let number = `${signal < 0 ? '-' : ''}`;
-  number += count[0];
-  if (count.length > 1) number += '.';
-  for (let i = 1; i < count.length; i++) {
-    number += count[i];
+  // index <= 0 时，在前侧填满0
+  if (index <= 0) {
+    for (; index < 1; index++) {
+      count.unshift('0');
+    }
   }
-  if (exponent !== 0) number += `e${exponent}`;
 
-  return Number(number).toFixed(Math.max(0, count.length - 1 - exponent));
+  // index > count.length 时，在后侧填满0
+  if (index >= count.length) {
+    for (; count.length <= index;) {
+      count[count.length] = '0';
+    }
+  }
+
+  // 添加小数点
+  count.splice(index, 0, '.');
+
+  let num = normalize(count.join(''));
+  if (!isZero(num)) num = (signal < 0 ? '-' : '') + num;
+
+  return num;
 }
 
 function fixToExponent (number, exponent) {
@@ -139,7 +158,7 @@ function rmZero (count) {
   return count;
 }
 
-function isZero (arr) {
+function isZeroArr (arr) {
   return arr.length === 1 && arr[0] === 0;
 }
 
@@ -224,8 +243,6 @@ export default class CustomCalculation {
   }
 
   multiplication (num1, num2) {
-    if (num1 === 0 || num2 === 0) return '0';
-
     let fixedNum1 = parse(num1);
     let fixedNum2 = parse(num2);
 
@@ -257,10 +274,6 @@ export default class CustomCalculation {
   }
 
   division (num1, num2) {
-    if (num1 === 0 && num2 === 0) return NaN;
-    if (num1 === 0) return 0;
-    if (num2 === 0) return num1 / num2; // infinity精确度没有意义...
-
     let fixedNum1 = parse(num1);
     let fixedNum2 = parse(num2);
 
@@ -276,19 +289,18 @@ export default class CustomCalculation {
 
     let index = 0;
     let tmpDividend = dividend.slice(0, divisorLength);
-    if (!judgeNoLessThan(tmpDividend, divisor)) e--; // 如果第一次需要借位，说明exponent需要再减1
 
     let c = [0];
     let tmp = 0;
     while (
-      !(isZero(tmpDividend) && index + divisorLength >= dividend.length) &&
+      !(isZeroArr(tmpDividend) && index + divisorLength >= dividend.length) &&
       index < MAX_EXP
     ) {
       // 防止无限循环
       tmp = 0;
       while (
         !judgeNoLessThan(tmpDividend, divisor) &&
-        !(isZero(tmpDividend) && index + divisorLength >= dividend.length)
+        !(isZeroArr(tmpDividend) && index + divisorLength >= dividend.length)
       ) {
         // 需要补齐
         tmpDividend.push(dividend[index + divisorLength] || 0);
@@ -308,7 +320,7 @@ export default class CustomCalculation {
     // MAX_LEN位四舍五入
     if (c[MAX_EXP] !== void 0) {
       c[MAX_EXP - 1] += c[MAX_EXP] > 4 ? 1 : 0;
-      c.length = MAX_EXP - 1;
+      c.length = MAX_EXP;
     }
 
     return stringify({

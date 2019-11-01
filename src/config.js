@@ -1,4 +1,9 @@
-export const MAX_DECIMAL = 15; // js自动取整会为16位小数
+/**
+ * 配置文件
+ * 后续这些东西可提供接口供调用者修改
+ */
+
+export const MAX_DECIMAL = 15; // js自动取整会为16位精度
 export const MAX_EXP = 21;
 
 const CONFIG = {

@@ -4,11 +4,10 @@
  * 优点 精确度高 理论上精度无限制
  * 缺点 需要额外的存储空间，计算成本也较高 数据格式需要转化，因此在链式计算时的处理比较复杂
  * 适用场景 比较复杂的计算场景 对精度要求高的场景 数值较大或较长，会超出安全范围的计算
- * 后续改进 1. 对数据格式进行整体的替换，从index.js开始就进行转换（类似于big.js的方式），这样可以更好的支持链式计算，返回的数据能够统一，在乘除还有加减的转化中也能实现更好的支持；2. stringify方法改写，完全采用自己拼接字符串方式，使用Number仍会丢失精度
  */
 
-import { MAX_EXP } from '../config';
-import { normalize, isZero } from '../utils';
+import { normalize, isZero, getNumComponent } from '../utils';
+import Calculation from './index';
 
 /**
  * 数据格式化整理，将数据转变为 count[0].count[1]count[2]... * 10^exponent 的形式
@@ -16,8 +15,10 @@ import { normalize, isZero } from '../utils';
  * @returns {<{ signal, exponent, count }>}
  */
 function parse (number) {
-  number = Number(number);
-  if (number === 0) {
+  let { integer, decimal, expFlag, exp } = getNumComponent(number); // getNumComponent内部进行了valid判断
+  exp = Number(`${expFlag}${exp}`);
+
+  if (isZero(number)) {
     return {
       signal: 1,
       exponent: 0,
@@ -25,17 +26,7 @@ function parse (number) {
     };
   }
 
-  const regExp = /^[+-]?(\d+)(\.(\d*))?(e([+-]?\d+))?$/;
-  const match = number.toString().match(regExp);
-  if (!match) {
-    throw new TypeError(`输入数字 ${number} 不符合规范`);
-  }
-
-  const integer = match[1];
-  const decimal = match[3] || '';
-  const exp = match[5] || 0;
-
-  let signal = number < 0 ? -1 : 1;
+  let signal = Number(number) < 0 ? -1 : 1;
 
   // interger
   let s = integer.split('').map(s => Number(s));
@@ -161,14 +152,13 @@ function rmZero (count) {
 function isZeroArr (arr) {
   return arr.length === 1 && arr[0] === 0;
 }
-
-export default class CustomCalculation {
+export default class CustomCalculation extends Calculation {
   add (num1, num2) {
     let fixedNum1 = parse(num1);
     let fixedNum2 = parse(num2);
 
     if (fixedNum1.signal !== fixedNum2.signal) {
-      return this.minus(num1, Number(this.multiplication(num2, -1))); // 使用Number还是会造成精确度缺失，参见改进1
+      return this.minus(num1, this.multiplication(num2, -1));
     }
 
     let e = Math.max(fixedNum1.exponent, fixedNum2.exponent);
@@ -205,11 +195,11 @@ export default class CustomCalculation {
     let fixedNum2 = parse(num2);
 
     if (fixedNum1.signal !== fixedNum2.signal) {
-      return this.add(num1, Number(this.multiplication(num2, -1)));
+      return this.add(num1, this.multiplication(num2, -1));
     }
 
     if (Math.abs(num1) < Math.abs(num2)) {
-      return this.multiplication(-1, Number(this.minus(num2, num1)));
+      return this.multiplication(-1, this.minus(num2, num1));
     }
 
     let e = Math.max(fixedNum1.exponent, fixedNum2.exponent);
@@ -294,7 +284,7 @@ export default class CustomCalculation {
     let tmp = 0;
     while (
       !(isZeroArr(tmpDividend) && index + divisorLength >= dividend.length) &&
-      index < MAX_EXP
+      index < this.precision
     ) {
       // 防止无限循环
       tmp = 0;
@@ -318,9 +308,9 @@ export default class CustomCalculation {
     }
 
     // MAX_LEN位四舍五入
-    if (c[MAX_EXP] !== void 0) {
-      c[MAX_EXP - 1] += c[MAX_EXP] > 4 ? 1 : 0;
-      c.length = MAX_EXP;
+    if (c[this.precision] !== void 0) {
+      c[this.precision - 1] += c[this.precision] > 4 ? 1 : 0;
+      c.length = this.precision;
     }
 
     return stringify({

@@ -75,7 +75,7 @@ export function judgeSafeRange (num) {
  * @param {Number|String} num
  * @returns {<{ flag, integer, decimal, expFlag, exp }>}
  */
-function getNumComponent (num) {
+export function getNumComponent (num) {
   const match = num.toString().match(numRegExp) || [];
 
   return {
@@ -97,10 +97,11 @@ export function getDecimalLength (num) {
 
   const {
     decimal,
+    expFlag,
     exp
   } = getNumComponent(num);
 
-  return decimal.length - Number(exp);
+  return decimal.length - Number(`${expFlag}${exp}`);
 }
 
 /**

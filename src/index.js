@@ -4,10 +4,11 @@ import { preAdd, preMinus, preMulti, preDivision } from './pre/pre-calc';
 import PrecisionCalculation from './calc/precision-calculation';
 import ParseToIntCalculation from './calc/parse-to-int-calculation';
 import CustomCalculation from './calc/custom-calculation';
+import { MAX_EXP, MAX_DECIMAL } from './config';
 
-// const calculation = new PrecisionCalculation();
-// const calculation = new ParseToIntCalculation();
-const calculation = new CustomCalculation();
+// const calculation = new PrecisionCalculation(MAX_DECIMAL);
+// const calculation = new ParseToIntCalculation(MAX_DECIMAL);
+const calculation = new CustomCalculation(MAX_EXP);
 
 /**
  * 精确的加法计算

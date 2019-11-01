@@ -4,7 +4,6 @@
  * 优点 相对简单 精确度比较高
  * 缺点 无法对超出Number.MAX_SAFE_INTEGER的数据进行精确计算，会丢失精确度
  * 适用场景 位数较少，计算范围不会超出安全范围的计算
- * 后续改进 更为友好的异常处理
  */
 
 import { getDecimalLength, judgeSafeRange } from '../utils';
@@ -25,7 +24,7 @@ function rangeCheck (num) {
  * @param {Number} num
  * @param {Number}
  */
-function fixNumToInt (num) {
+function numToInt (num) {
   let fixedNumStr = num.toString();
   const index = num.toString().indexOf('e');
   if (index > -1) {
@@ -42,40 +41,40 @@ function fixNumToInt (num) {
  */
 function fixNum (num) {
   const base = getDecimalLength(num);
-  return fixNumToInt(num) / Math.pow(10, base);
+  return numToInt(num) / Math.pow(10, base);
 }
+
+/**
+ * 数字乘法，返回乘积
+ * @param {Number} num1
+ * @param {Number} num2
+ * @param {Number}
+ */
+function multi (num1, num2) {
+  let fixedNum1 = fixNum(num1);
+  let fixedNum2 = fixNum(num2);
+  const base1 = getDecimalLength(num1);
+  const base2 = getDecimalLength(num2);
+
+  fixedNum1 = numToInt(fixedNum1);
+  fixedNum2 = numToInt(fixedNum2);
+
+  rangeCheck(fixedNum1);
+  rangeCheck(fixedNum2);
+
+  const val = fixedNum1 * fixedNum2;
+  rangeCheck(val);
+
+  return val / Math.pow(10, base1 + base2);
+}
+
 export default class ParseToIntCalculation extends Calculation {
-  /**
-   * 数字乘法，返回乘积
-   * @param {Number} num1
-   * @param {Number} num2
-   * @param {Number}
-   */
-  static numMulti (num1, num2) {
-    let fixedNum1 = fixNum(num1);
-    let fixedNum2 = fixNum(num2);
-    const base1 = getDecimalLength(fixedNum1);
-    const base2 = getDecimalLength(fixedNum2);
-
-    fixedNum1 = fixNumToInt(fixedNum1);
-    fixedNum2 = fixNumToInt(fixedNum2);
-
-    rangeCheck(fixedNum1);
-    rangeCheck(fixedNum2);
-
-    const val = fixedNum1 * fixedNum2;
-    rangeCheck(val);
-
-    return val / Math.pow(10, base1 + base2);
-  }
-
   add (num1, num2) {
     const base = Math.max(getDecimalLength(num1), getDecimalLength(num2));
     const baseNum = Math.pow(10, base);
 
     return (
-      (ParseToIntCalculation.numMulti(num1, baseNum) +
-        ParseToIntCalculation.numMulti(num2, baseNum)) /
+      (multi(Number(num1), baseNum) + multi(Number(num2), baseNum)) /
       baseNum
     ).toString();
   }
@@ -85,21 +84,20 @@ export default class ParseToIntCalculation extends Calculation {
     const baseNum = Math.pow(10, base);
 
     return (
-      (ParseToIntCalculation.numMulti(num1, baseNum) -
-        ParseToIntCalculation.numMulti(num2, baseNum)) /
+      (multi(Number(num1), baseNum) - multi(Number(num2), baseNum)) /
       baseNum
     ).toString(); // multiplication内部进行过range判断
   }
 
   multiplication (num1, num2) {
-    return ParseToIntCalculation.numMulti(num1, num2).toString();
+    return multi(Number(num1), Number(num2)).toString();
   }
 
   division (num1, num2) {
     const base1 = getDecimalLength(num1);
     const base2 = getDecimalLength(num2);
-    const fixedNum1 = fixNumToInt(num1);
-    const fixedNum2 = fixNumToInt(num2);
+    const fixedNum1 = numToInt(num1);
+    const fixedNum2 = numToInt(num2);
 
     rangeCheck(fixedNum1);
     rangeCheck(fixedNum2);
@@ -108,10 +106,7 @@ export default class ParseToIntCalculation extends Calculation {
     rangeCheck(val);
 
     return Number(
-      ParseToIntCalculation.numMulti(
-        val,
-        Math.pow(10, base2 - base1)
-      ).toPrecision(MAX_DECIMAL)
+      multi(val, Math.pow(10, base2 - base1)).toPrecision(MAX_DECIMAL)
     ).toString();
   }
 }

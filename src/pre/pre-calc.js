@@ -7,12 +7,12 @@
 
 import { isNaN, isInt, isInfinite, isZero } from '../utils';
 
-const naN = {
+export const naN = {
   calc: true,
   val: 'NaN'
 };
 
-const falsy = {
+export const falsy = {
   calc: false,
   val: -1
 };

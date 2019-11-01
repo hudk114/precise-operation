@@ -5,19 +5,13 @@
  * 适用场景 位数少的简单计算
  */
 
-import { MAX_DECIMAL } from '../config';
 import Calculation from './index';
 
-function toPrecision (number, precision = MAX_DECIMAL) {
+function toPrecision (number, precision) {
   return Number(number.toPrecision(precision)).toString();
 }
 
 export default class PrecisionCalculation extends Calculation {
-  constructor (precision = MAX_DECIMAL) {
-    super();
-    this.precision = precision;
-  }
-
   add (num1, num2) {
     return toPrecision(Number(num1) + Number(num2), this.precision);
   }

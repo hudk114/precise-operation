@@ -7,14 +7,14 @@
  */
 
 import { getDecimalLength, judgeSafeRange } from '../utils';
-import CONFIG, { MAX_DECIMAL } from '../config';
+import { MAX_DECIMAL, SAFE_RANGE_ERROR, SAFE_RANGE_WARNING } from '../config';
 import { rangeError, rangeWarn } from '../error';
 import Calculation from './index';
 
-function rangeCheck (num) {
+function rangeCheck(num) {
   if (!judgeSafeRange(num)) {
-    if (CONFIG.SAFE_RANGE_ERROR) rangeError();
-    if (CONFIG.SAFE_RANGE_WARNING) rangeWarn(); // TODO
+    if (SAFE_RANGE_ERROR) rangeError();
+    if (SAFE_RANGE_WARNING) rangeWarn();
   }
 }
 
@@ -24,7 +24,7 @@ function rangeCheck (num) {
  * @param {Number} num
  * @param {Number}
  */
-function numToInt (num) {
+function numToInt(num) {
   let fixedNumStr = num.toString();
   const index = num.toString().indexOf('e');
   if (index > -1) {
@@ -39,7 +39,7 @@ function numToInt (num) {
  * @param {Number} num
  * @param {Number}
  */
-function fixNum (num) {
+function fixNum(num) {
   const base = getDecimalLength(num);
   return numToInt(num) / Math.pow(10, base);
 }
@@ -50,7 +50,7 @@ function fixNum (num) {
  * @param {Number} num2
  * @param {Number}
  */
-function multi (num1, num2) {
+function multi(num1, num2) {
   let fixedNum1 = fixNum(num1);
   let fixedNum2 = fixNum(num2);
   const base1 = getDecimalLength(num1);
@@ -69,7 +69,7 @@ function multi (num1, num2) {
 }
 
 export default class ParseToIntCalculation extends Calculation {
-  add (num1, num2) {
+  add(num1, num2) {
     const base = Math.max(getDecimalLength(num1), getDecimalLength(num2));
     const baseNum = Math.pow(10, base);
 
@@ -79,7 +79,7 @@ export default class ParseToIntCalculation extends Calculation {
     ).toString();
   }
 
-  minus (num1, num2) {
+  minus(num1, num2) {
     const base = Math.max(getDecimalLength(num1), getDecimalLength(num2));
     const baseNum = Math.pow(10, base);
 
@@ -89,11 +89,11 @@ export default class ParseToIntCalculation extends Calculation {
     ).toString(); // multiplication内部进行过range判断
   }
 
-  multiplication (num1, num2) {
+  multiplication(num1, num2) {
     return multi(Number(num1), Number(num2)).toString();
   }
 
-  division (num1, num2) {
+  division(num1, num2) {
     const base1 = getDecimalLength(num1);
     const base2 = getDecimalLength(num2);
     const fixedNum1 = numToInt(num1);

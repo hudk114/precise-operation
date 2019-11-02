@@ -7,24 +7,24 @@
 
 import Calculation from './index';
 
-function toPrecision (number, precision) {
+function toPrecision(number, precision) {
   return Number(number.toPrecision(precision)).toString();
 }
 
 export default class PrecisionCalculation extends Calculation {
-  add (num1, num2) {
+  add(num1, num2) {
     return toPrecision(Number(num1) + Number(num2), this.precision);
   }
 
-  minus (num1, num2) {
+  minus(num1, num2) {
     return toPrecision(Number(num1) - Number(num2), this.precision);
   }
 
-  multiplication (num1, num2) {
+  multiplication(num1, num2) {
     return toPrecision(Number(num1) * Number(num2), this.precision);
   }
 
-  division (num1, num2) {
+  division(num1, num2) {
     return toPrecision(Number(num1) / Number(num2), this.precision);
   }
 }

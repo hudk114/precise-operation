@@ -7,7 +7,7 @@ const numRegExp = /^([+-]?)(\d+)(\.(\d*))?(e([+-]?)(\d+))?$/;
  * @param {Number|String} num
  * @returns {boolean}
  */
-export function isNum (num) {
+export function isNum(num) {
   if (typeof num !== 'number' && typeof num !== 'string') return false;
 
   return isNaN(num) || (num !== '' && !isNaN(Number(num)));
@@ -18,7 +18,7 @@ export function isNum (num) {
  * @param {Number|String} num
  * @returns {boolean}
  */
-export function isValidNum (num) {
+export function isValidNum(num) {
   return numRegExp.test(num.toString());
 }
 
@@ -27,7 +27,7 @@ export function isValidNum (num) {
  * @param {Number|String} num
  * @returns {boolean}
  */
-export function isInt (num) {
+export function isInt(num) {
   return isValidNum(num) && !getDecimalLength(num);
 }
 
@@ -36,7 +36,7 @@ export function isInt (num) {
  * @param {Number|String} num
  * @returns {boolean}
  */
-export function isNaN (num) {
+export function isNaN(num) {
   return num.toString() === 'NaN';
 }
 
@@ -45,7 +45,7 @@ export function isNaN (num) {
  * @param {Number|String} num
  * @returns {boolean}
  */
-export function isInfinite (num) {
+export function isInfinite(num) {
   return !isFinite(Number(num));
 }
 
@@ -54,7 +54,7 @@ export function isInfinite (num) {
  * @param {Number|String} num
  * @returns {boolean}
  */
-export function isZero (num) {
+export function isZero(num) {
   return num === 0 || num === '0' || num === '+0' || num === '-0';
 }
 
@@ -63,7 +63,7 @@ export function isZero (num) {
  * @param {Number|String} num
  * @returns {Boolean}
  */
-export function judgeSafeRange (num) {
+export function judgeSafeRange(num) {
   if (!isValidNum(num)) return false;
 
   const number = Number(num);
@@ -75,7 +75,7 @@ export function judgeSafeRange (num) {
  * @param {Number|String} num
  * @returns {<{ flag, integer, decimal, expFlag, exp }>}
  */
-export function getNumComponent (num) {
+export function getNumComponent(num) {
   const match = num.toString().match(numRegExp) || [];
 
   return {
@@ -92,14 +92,10 @@ export function getNumComponent (num) {
  * @param {Number|String} num
  * @returns {Number}
  */
-export function getDecimalLength (num) {
+export function getDecimalLength(num) {
   if (!isValidNum(num)) return 0;
 
-  const {
-    decimal,
-    expFlag,
-    exp
-  } = getNumComponent(num);
+  const { decimal, expFlag, exp } = getNumComponent(num);
 
   return decimal.length - Number(`${expFlag}${exp}`);
 }
@@ -111,7 +107,7 @@ export function getDecimalLength (num) {
  * @param {String} char
  * @returns {String}
  */
-export function rmStartChar (str, char) {
+export function rmStartChar(str, char) {
   let s = str.split('');
   let index = s.findIndex(c => char !== c);
   if (index === -1) return '';
@@ -125,11 +121,14 @@ export function rmStartChar (str, char) {
  * @param {String} char
  * @returns {String}
  */
-export function rmEndChar (str, char) {
+export function rmEndChar(str, char) {
   let s = str.split('').reverse();
   let index = s.findIndex(c => char !== c);
   if (index === -1) return '';
-  return s.slice(index).reverse().join('');
+  return s
+    .slice(index)
+    .reverse()
+    .join('');
 }
 
 /**
@@ -141,21 +140,17 @@ export function rmEndChar (str, char) {
  * @param {String} num
  * @returns {String}
  */
-export function normalize (num) {
+export function normalize(num) {
   if (isNaN(num) || isInfinite(num)) return num;
   if (!isValidNum(num)) paraError();
 
-  let {
-    flag,
-    integer,
-    decimal,
-    expFlag,
-    exp
-  } = getNumComponent(num);
+  let { flag, integer, decimal, expFlag, exp } = getNumComponent(num);
 
   integer = rmStartChar(integer, '0') || '0'; // integer部分必须有值
   decimal = rmEndChar(decimal, '0');
   exp = rmStartChar(exp, '0');
 
-  return `${flag}${integer}${decimal ? '.' + decimal : ''}${exp ? 'e' + expFlag + exp : ''}`;
+  return `${flag}${integer}${decimal ? '.' + decimal : ''}${
+    exp ? 'e' + expFlag + exp : ''
+  }`;
 }

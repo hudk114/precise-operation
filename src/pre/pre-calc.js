@@ -25,7 +25,7 @@ export const falsy = {
  * @param {Function} func
  * @returns {Function}
  */
-function preDecorator (func) {
+function preDecorator(func) {
   /**
    * 预计算函数
    * @param {Number|String} num1
@@ -59,7 +59,7 @@ export const preMinus = preDecorator((a, b) =>
  * @param {Number|String} num2
  * @returns {<{calc, val}>}
  */
-export function preMulti (num1, num2) {
+export function preMulti(num1, num2) {
   if (isNaN(num1) || isNaN(num2)) return naN;
 
   if (isInfinite(num1) || isInfinite(num2) || (isInt(num1) && isInt(num2))) {
@@ -81,11 +81,12 @@ export function preMulti (num1, num2) {
 
 /**
  * 预计算除法
+ * 与其余几个预处理方法不同，整数除法不会被预处理
  * @param {Number|String} num1
  * @param {Number|String} num2
  * @returns {<{calc, val}>}
  */
-export function preDivision (num1, num2) {
+export function preDivision(num1, num2) {
   if (isNaN(num1) || isNaN(num2)) return naN;
   if (isZero(num1) && isZero(num2)) return naN;
 

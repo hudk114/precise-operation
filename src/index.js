@@ -6,9 +6,10 @@ import ParseToIntCalculation from './calc/parse-to-int-calculation';
 import CustomCalculation from './calc/custom-calculation';
 import { MAX_EXP, MAX_DECIMAL } from './config';
 
-// const calculation = new PrecisionCalculation(MAX_DECIMAL);
-// const calculation = new ParseToIntCalculation(MAX_DECIMAL);
-const calculation = new CustomCalculation(MAX_EXP);
+const precisionCalculation = new PrecisionCalculation(MAX_DECIMAL); // eslint-disable-line no-unused-vars
+const parseToIntCalculation = new ParseToIntCalculation(MAX_DECIMAL); // eslint-disable-line no-unused-vars
+const customCalculation = new CustomCalculation(MAX_EXP); // eslint-disable-line no-unused-vars
+const calculation = customCalculation;
 
 /**
  * 精确的加法计算
@@ -17,7 +18,7 @@ const calculation = new CustomCalculation(MAX_EXP);
  * @param  {...<Number|String>} rest 剩余加数
  * @returns {String}
  */
-export function add (num1, num2, ...rest) {
+export function add(num1, num2, ...rest) {
   if (rest.length) return add(add(num1, num2), ...rest);
 
   preCheck(num1, num2);
@@ -37,7 +38,7 @@ export function add (num1, num2, ...rest) {
  * @param  {...<Number|String>} rest 剩余减数
  * @returns {String}
  */
-export function minus (num1, num2, ...rest) {
+export function minus(num1, num2, ...rest) {
   if (rest.length) return minus(minus(num1, num2), ...rest);
 
   preCheck(num1, num2);
@@ -57,7 +58,7 @@ export function minus (num1, num2, ...rest) {
  * @param  {...<Number|String>} rest 剩余乘数
  * @returns {String}
  */
-export function multiplication (num1, num2, ...rest) {
+export function multiplication(num1, num2, ...rest) {
   if (rest.length) return multiplication(multiplication(num1, num2), ...rest);
 
   preCheck(num1, num2);
@@ -77,7 +78,7 @@ export function multiplication (num1, num2, ...rest) {
  * @param  {...<Number|String>} rest 剩余除数
  * @returns {String}
  */
-export function division (num1, num2, ...rest) {
+export function division(num1, num2, ...rest) {
   if (rest.length) return division(division(num1, num2), ...rest);
 
   preCheck(num1, num2);

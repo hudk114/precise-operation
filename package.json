@@ -4,9 +4,9 @@
   "description": "",
   "main": "",
   "scripts": {
-    "prettier": "prettier --write ./src/**/*.js",
-    "linter": "eslint ./src/**/*.js",
-    "format": "prettier-eslint --write ./src/**/*.js",
+    "prettier": "prettier --write ./src/**/*.js ./src/*.js",
+    "linter": "eslint ./src/**/*.js ./src/*.js",
+    "format": "prettier-eslint --write ./src/**/*.js ./src/*.js",
     "stylelinter": "stylelint ./src/**/*.css",
     "dev": "rollup -w -c rollup.config.dev.js",
     "build": "cross-env NODE_ENV=production rollup -c rollup.config.prod.js",

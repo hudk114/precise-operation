@@ -10,7 +10,7 @@ import { normalize } from '../utils';
  * @param {Number|String} num
  * @returns {String}
  */
-export default function preProcess (num) {
+export default function preProcess(num) {
   if (typeof num === 'number') {
     // -0特殊转化
     if (num === 0 && 1 / num < 0) return '-0';

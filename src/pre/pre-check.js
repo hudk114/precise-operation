@@ -6,6 +6,6 @@
 import { paraError } from '../error';
 import { isNum } from '../utils';
 
-export default function preCheck (num1, num2) {
+export default function preCheck(num1, num2) {
   if (!isNum(num1) || !isNum(num2)) paraError();
 }

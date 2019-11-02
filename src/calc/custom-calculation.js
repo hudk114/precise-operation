@@ -4,6 +4,7 @@
  * 优点 精确度高 理论上精度无限制
  * 缺点 需要额外的存储空间，计算成本也较高 数据格式需要转化，因此在链式计算时的处理比较复杂
  * 适用场景 比较复杂的计算场景 对精度要求高的场景 数值较大或较长，会超出安全范围的计算
+ * 后续改进 1. 建立<{ signal: Number, exponent: Number, count: Array<Number> }> 的数据结构，后续采用ts改写
  */
 
 import { normalize, isZero, getNumComponent } from '../utils';
@@ -14,7 +15,7 @@ import Calculation from './index';
  * @param {Number|String} number
  * @returns {<{ signal, exponent, count }>}
  */
-function parse (number) {
+function parse(number) {
   let { integer, decimal, expFlag, exp } = getNumComponent(number); // getNumComponent内部进行了valid判断
   exp = Number(`${expFlag}${exp}`);
 
@@ -63,7 +64,7 @@ function parse (number) {
  * @param {<{ signal, exponent, count }>} param0
  * @returns {String}
  */
-function stringify ({ signal = 1, exponent = 0, count = [] } = {}) {
+function stringify({ signal = 1, exponent = 0, count = [] } = {}) {
   let index = 1 + exponent;
 
   // index <= 0 时，在前侧填满0
@@ -89,9 +90,14 @@ function stringify ({ signal = 1, exponent = 0, count = [] } = {}) {
   return num;
 }
 
-function fixToExponent (number, exponent) {
-  // exponent >= number.exponent
-  let len = exponent - number.exponent;
+/**
+ * 根据exp补全number中count的零
+ * @param {{<{ signal, exponent, count }>}} number
+ * @param {Number} exp
+ * @returns {<{ signal, exponent, count }>}
+ */
+function fixToExp(number, exp) {
+  let len = exp - number.exponent;
   while (len > 0) {
     number.count.unshift(0);
     len--;
@@ -101,26 +107,35 @@ function fixToExponent (number, exponent) {
 }
 
 /**
- * 比较 arr1 是否大于等于 arr2
+ * 比较 arr1 与 arr2 的大小
  * @param {Array<Number>} arr1
  * @param {Array<Number>} arr2
+ * @returns {Number} 1: arr1 > arr2 0: arr1 === arr2 -1: arr1 < arr2
  */
-function judgeNoLessThan (arr1, arr2) {
-  if (arr1.length > arr2.length) return true;
-  if (arr1.length < arr2.length) return false;
+function compareArrNum(arr1, arr2) {
+  if (arr1.length > arr2.length) return 1;
+  if (arr1.length < arr2.length) return -1;
   let i = 0;
   while (i < arr1.length) {
     if (arr1[i] > arr2[i]) {
-      return true;
+      return 1;
     }
     if (arr1[i] < arr2[i++]) {
-      return false;
+      return -1;
     }
   }
-  return true;
+  return 0;
 }
 
-function minusArray (arr1, arr2) {
+/**
+ * Math.abs(arr1 - arr2)
+ * @param {Array<Number>} arr1
+ * @param {Array<Number>} arr2
+ * @returns {Array<Number>}
+ */
+function minusArray(arr1, arr2) {
+  if (compareArrNum(arr1, arr2) < 0) return minusArray(arr2, arr1);
+
   // arr1一定大于arr2
   let len1 = arr1.length;
   let len2 = arr2.length;
@@ -137,23 +152,34 @@ function minusArray (arr1, arr2) {
     }
   }
 
-  return rmZero(count);
+  return rmStartZero(count);
 }
 
-function rmZero (count) {
-  while (count.length && count[0] === 0) {
-    count.shift();
+/**
+ * 去掉number中起始不必要的0
+ * @param {Array<Number>} number
+ * @returns {Array<Number>}
+ */
+function rmStartZero(number) {
+  while (number.length && number[0] === 0) {
+    number.shift();
   }
-  if (!count.length) count = [0];
+  if (!number.length) number = [0]; // 没有的情况下必须给一个0
 
-  return count;
+  return number;
 }
 
-function isZeroArr (arr) {
-  return arr.length === 1 && arr[0] === 0;
+/**
+ * 判断number是否为0
+ * @param {Array<Number>} number
+ * @returns {Array<Number>}
+ */
+function isZeroNum(number) {
+  return number.length === 1 && number[0] === 0;
 }
+
 export default class CustomCalculation extends Calculation {
-  add (num1, num2) {
+  add(num1, num2) {
     let fixedNum1 = parse(num1);
     let fixedNum2 = parse(num2);
 
@@ -163,9 +189,9 @@ export default class CustomCalculation extends Calculation {
 
     let e = Math.max(fixedNum1.exponent, fixedNum2.exponent);
     if (e > fixedNum1.exponent) {
-      fixedNum1 = fixToExponent(fixedNum1, e);
+      fixedNum1 = fixToExp(fixedNum1, e);
     } else {
-      fixedNum2 = fixToExponent(fixedNum2, e);
+      fixedNum2 = fixToExp(fixedNum2, e);
     }
 
     let len = Math.max(fixedNum1.count.length, fixedNum2.count.length);
@@ -190,7 +216,7 @@ export default class CustomCalculation extends Calculation {
     });
   }
 
-  minus (num1, num2) {
+  minus(num1, num2) {
     let fixedNum1 = parse(num1);
     let fixedNum2 = parse(num2);
 
@@ -204,9 +230,9 @@ export default class CustomCalculation extends Calculation {
 
     let e = Math.max(fixedNum1.exponent, fixedNum2.exponent);
     if (e > fixedNum1.exponent) {
-      fixedNum1 = fixToExponent(fixedNum1, e);
+      fixedNum1 = fixToExp(fixedNum1, e);
     } else {
-      fixedNum2 = fixToExponent(fixedNum2, e);
+      fixedNum2 = fixToExp(fixedNum2, e);
     }
 
     let len = Math.max(fixedNum1.count.length, fixedNum2.count.length);
@@ -232,7 +258,7 @@ export default class CustomCalculation extends Calculation {
     });
   }
 
-  multiplication (num1, num2) {
+  multiplication(num1, num2) {
     let fixedNum1 = parse(num1);
     let fixedNum2 = parse(num2);
 
@@ -263,7 +289,7 @@ export default class CustomCalculation extends Calculation {
     });
   }
 
-  division (num1, num2) {
+  division(num1, num2) {
     let fixedNum1 = parse(num1);
     let fixedNum2 = parse(num2);
 
@@ -283,23 +309,23 @@ export default class CustomCalculation extends Calculation {
     let c = [0];
     let tmp = 0;
     while (
-      !(isZeroArr(tmpDividend) && index + divisorLength >= dividend.length) &&
+      !(isZeroNum(tmpDividend) && index + divisorLength >= dividend.length) &&
       index < this.precision
     ) {
       // 防止无限循环
       tmp = 0;
       while (
-        !judgeNoLessThan(tmpDividend, divisor) &&
-        !(isZeroArr(tmpDividend) && index + divisorLength >= dividend.length)
+        compareArrNum(tmpDividend, divisor) === -1 &&
+        !(isZeroNum(tmpDividend) && index + divisorLength >= dividend.length)
       ) {
         // 需要补齐
         tmpDividend.push(dividend[index + divisorLength] || 0);
-        tmpDividend = rmZero(tmpDividend);
+        tmpDividend = rmStartZero(tmpDividend);
         index++;
         c[index] = 0;
       }
 
-      while (judgeNoLessThan(tmpDividend, divisor)) {
+      while (compareArrNum(tmpDividend, divisor) > -1) {
         tmpDividend = minusArray(tmpDividend, divisor);
         tmp++;
       }

@@ -10,7 +10,7 @@
     "stylelinter": "stylelint ./src/**/*.css",
     "dev": "rollup -w -c rollup.config.dev.js",
     "build": "cross-env NODE_ENV=production rollup -c rollup.config.prod.js",
-    "test": "jest"
+    "test": "jest --coverage"
   },
   "repository": {
     "type": "git",

@@ -9,7 +9,7 @@
 import { getDecimalLength, judgeSafeRange } from '../utils';
 import { MAX_DECIMAL, SAFE_RANGE_ERROR, SAFE_RANGE_WARNING } from '../config';
 import { rangeError, rangeWarn } from '../error';
-import Calculation from './index';
+import Calculation from './calculation';
 
 function rangeCheck(num) {
   if (!judgeSafeRange(num)) {

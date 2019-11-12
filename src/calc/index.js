@@ -1,25 +1,12 @@
-/**
- * Caclulation基类
- */
+import PrecisionCalculation from './precision-calculation';
+import ParseToIntCalculation from './parse-to-int-calculation';
+import CustomCalculation from './custom-calculation';
+import { MAX_EXP, MAX_DECIMAL } from '../config';
 
-export default class Calculation {
-  constructor(precision) {
-    this.precision = precision;
-  }
+const precisionCalculation = new PrecisionCalculation(MAX_DECIMAL); // eslint-disable-line no-unused-vars
+const parseToIntCalculation = new ParseToIntCalculation(MAX_DECIMAL); // eslint-disable-line no-unused-vars
+const customCalculation = new CustomCalculation(MAX_EXP); // eslint-disable-line no-unused-vars
 
-  add(num1, num2) {
-    return num1 + num2;
-  }
+const calculation = customCalculation;
 
-  minus(num1, num2) {
-    return num1 - num2;
-  }
-
-  multiplication(num1, num2) {
-    return num1 * num2;
-  }
-
-  division(num1, num2) {
-    return num1 / num2;
-  }
-}
+export default calculation;

@@ -3,9 +3,59 @@
  * 验证出错 抛出异常
  */
 
-import { paraError } from '../error';
-import { isNum } from '../utils';
+import { isNaN, isInt, isInfinite, isZero } from '../utils';
 
-export default function preCheck(num1, num2) {
-  if (!isNum(num1) || !isNum(num2)) paraError();
+/**
+ * 判断 num1 + num2 是否需要精确除法
+ * 两者任一为 NaN 或者 Inifinity，或者两者均为整数，不需要精确除法
+ * @param {String} num1
+ * @param {String} num2
+ * @returns {Boolean}
+ */
+export function preAdd(num1, num2) {
+  return (
+    ![num1, num2].find(num => isNaN(num) || isInfinite(num)) &&
+    !(isInt(num1) && isInt(num2))
+  );
+}
+
+/**
+ * 判断 num1 - num2 是否需要精确除法
+ * 两者任一为 NaN 或者 Inifinity，或者两者均为整数，不需要精确除法
+ * @param {String} num1
+ * @param {String} num2
+ * @returns {Boolean}
+ */
+export function preMinus(num1, num2) {
+  return (
+    ![num1, num2].find(num => isNaN(num) || isInfinite(num)) &&
+    !(isInt(num1) && isInt(num2))
+  );
+}
+
+/**
+ * 判断 num1 * num2 是否需要精确除法
+ * 两者任一为 NaN 或者 0 或者 Inifinity，或者两者均为整数，不需要精确除法
+ * @param {String} num1
+ * @param {String} num2
+ * @returns {Boolean}
+ */
+export function preMulti(num1, num2) {
+  return (
+    ![num1, num2].find(num => isNaN(num) || isZero(num) || isInfinite(num)) &&
+    !(isInt(num1) && isInt(num2))
+  );
+}
+
+/**
+ * 判断 num1 / num2 是否需要精确除法
+ * 两者任一为 NaN 或者 0 或者 Inifinity 即不需要精确除法
+ * @param {String} num1
+ * @param {String} num2
+ * @returns {Boolean}
+ */
+export function preDivision(num1, num2) {
+  return ![num1, num2].find(
+    num => isNaN(num) || isZero(num) || isInfinite(num)
+  );
 }

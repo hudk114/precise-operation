@@ -1,15 +1,8 @@
-import preCheck from './pre/pre-check';
+import preValid from './pre/pre-valid';
+import * as preCheck from './pre/pre-check';
+import * as preCalc from './pre/pre-calc';
 import preProcess from './pre/pre-process';
-import { preAdd, preMinus, preMulti, preDivision } from './pre/pre-calc';
-import PrecisionCalculation from './calc/precision-calculation';
-import ParseToIntCalculation from './calc/parse-to-int-calculation';
-import CustomCalculation from './calc/custom-calculation';
-import { MAX_EXP, MAX_DECIMAL } from './config';
-
-const precisionCalculation = new PrecisionCalculation(MAX_DECIMAL); // eslint-disable-line no-unused-vars
-const parseToIntCalculation = new ParseToIntCalculation(MAX_DECIMAL); // eslint-disable-line no-unused-vars
-const customCalculation = new CustomCalculation(MAX_EXP); // eslint-disable-line no-unused-vars
-const calculation = customCalculation;
+import calculation from './calc/index';
 
 /**
  * 精确的加法计算
@@ -21,14 +14,14 @@ const calculation = customCalculation;
 export function add(num1, num2, ...rest) {
   if (rest.length) return add(add(num1, num2), ...rest);
 
-  preCheck(num1, num2);
+  preValid(num1, num2);
 
   const n1 = preProcess(num1);
   const n2 = preProcess(num2);
-  const res = preAdd(n1, n2);
-  if (res.calc) return res.val;
 
-  return calculation.add(n1, n2);
+  return preCheck.preAdd(n1, n2)
+    ? calculation.add(n1, n2)
+    : preCalc.preAdd(n1, n2);
 }
 
 /**
@@ -41,14 +34,14 @@ export function add(num1, num2, ...rest) {
 export function minus(num1, num2, ...rest) {
   if (rest.length) return minus(minus(num1, num2), ...rest);
 
-  preCheck(num1, num2);
+  preValid(num1, num2);
 
   const n1 = preProcess(num1);
   const n2 = preProcess(num2);
-  const res = preMinus(n1, n2);
-  if (res.calc) return res.val;
 
-  return calculation.minus(n1, n2);
+  return preCheck.preMinus(n1, n2)
+    ? calculation.minus(n1, n2)
+    : preCalc.preMinus(n1, n2);
 }
 
 /**
@@ -61,14 +54,14 @@ export function minus(num1, num2, ...rest) {
 export function multiplication(num1, num2, ...rest) {
   if (rest.length) return multiplication(multiplication(num1, num2), ...rest);
 
-  preCheck(num1, num2);
+  preValid(num1, num2);
 
   const n1 = preProcess(num1);
   const n2 = preProcess(num2);
-  const res = preMulti(n1, n2);
-  if (res.calc) return res.val;
 
-  return calculation.multiplication(n1, n2);
+  return preCheck.preMulti(n1, n2)
+    ? calculation.multiplication(n1, n2)
+    : preCalc.preMulti(n1, n2);
 }
 
 /**
@@ -81,12 +74,12 @@ export function multiplication(num1, num2, ...rest) {
 export function division(num1, num2, ...rest) {
   if (rest.length) return division(division(num1, num2), ...rest);
 
-  preCheck(num1, num2);
+  preValid(num1, num2);
 
   const n1 = preProcess(num1);
   const n2 = preProcess(num2);
-  const res = preDivision(n1, n2);
-  if (res.calc) return res.val;
 
-  return calculation.division(n1, n2);
+  return preCheck.preDivision(n1, n2)
+    ? calculation.division(n1, n2)
+    : preCalc.preDivision(n1, n2);
 }

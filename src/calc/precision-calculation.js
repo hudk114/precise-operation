@@ -5,7 +5,7 @@
  * 适用场景 位数少的简单计算
  */
 
-import Calculation from './index';
+import Calculation from './calculation';
 
 function toPrecision(number, precision) {
   return Number(number.toPrecision(precision)).toString();

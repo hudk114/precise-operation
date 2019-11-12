@@ -8,7 +8,7 @@
  */
 
 import { normalize, isZero, getNumComponent } from '../utils';
-import Calculation from './index';
+import Calculation from './calculation';
 
 /**
  * 数据格式化整理，将数据转变为 count[0].count[1]count[2]... * 10^exponent 的形式
